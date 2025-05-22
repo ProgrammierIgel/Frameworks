@@ -97,7 +97,7 @@ class Console:
                      "KEY_SUP", "KEY_SDOWN", "KEY_SRESIZE"
                      "KEY_SDC", "KEY_SNPAGE", "KEY_SPPAGE",
                      "KEY_SIC", "KEY_SBTAB", "KEY_SLEFT",
-                     "KEY_SRIGHT"
+                     "KEY_SRIGHT", "KEY_SHOME", "KEY_SEND"
                      ]:
                 continue
             elif ord(c)== 9:
@@ -150,7 +150,7 @@ class Console:
             self.console.move(self.height, self.width + cursor)
         return input
 
-    def input_number(self, msg: str = "", type: Literal["password", "normal"] = "normal") -> float:
+    def input_number(self, msg: str = "", type: Literal["float", "int"] = "float") -> (float, bool):
         self.clear()
         cursor = 0
         curses.noecho()
@@ -188,13 +188,7 @@ class Console:
                 cursor = np.clip(cursor+1, len(input)*-1, 0)
                 if not msg == "":
                     self.print(msg)
-                if type == "normal":
-                    self.print(input, end = "")if len(input)> 0 else None
-                else:
-                    input_to_print = ""
-                    for _ in input:
-                        input_to_print += "*"
-                    self.print(input_to_print, end = "")if len(input)> 0 else None
+                self.print(input, end = "")if len(input)> 0 else None
 
                 self.console.move(self.height, self.width +cursor)
                 continue
@@ -210,13 +204,13 @@ class Console:
                      "KEY_SUP", "KEY_SDOWN", "KEY_SRESIZE"
                      "KEY_SDC", "KEY_SNPAGE", "KEY_SPPAGE",
                      "KEY_SIC", "KEY_SBTAB", "KEY_SLEFT",
-                     "KEY_SRIGHT",
+                     "KEY_SRIGHT", "KEY_SHOME"
                      ]:
                 continue
             elif ord(c)== 9:
                 if cursor == 0:
                     continue
-            elif c == ",":
+            elif c == "," and type == "float":
                 c = "."
 
             elif c == "." and c in input:
@@ -238,13 +232,7 @@ class Console:
                 cursor = np.clip(cursor, len(input)*-1, 0)if len(input)> 0 else 0
                 if not msg == "":
                     self.print(msg)
-                if type == "normal":
-                    self.print(input, end = "")if len(input)> 0 else None
-                else:
-                    input_to_print = ""
-                    for _ in input:
-                        input_to_print += "*"
-                    self.print(input_to_print, end = "")if len(input)> 0 else None
+                self.print(input, end = "")if len(input)> 0 else None
                 self.console.move(self.height, self.width +cursor)
                 continue
             if cursor == 0:
@@ -252,12 +240,12 @@ class Console:
                 "0", "1", "2",
                 "3", "4", "5",
                 "6", "7", "8",
-                "9", "."
+                "9", "." if type == "float" else ""
             ] else ""
             else:
                 part1 = input[0: len(input)+cursor]
                 part2 = input[len(input)+cursor: len(input)]
-                if c not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]:
+                if c not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." if type == "float" else ""]:
                     continue
                 input = part1 + c + part2
             cursor = np.clip(cursor, len(input)*-1, 0)
@@ -265,17 +253,14 @@ class Console:
 
             if not msg == "":
                 self.print(msg)
-            if type == "normal":
-                self.print(input, end = "")if len(input)> 0 else None
-            else:
-                input_to_print = ""
-                for _ in input:
-                    input_to_print += "*"
-                self.print(input_to_print, end = "")if len(input)> 0 else None
+            self.print(input, end = "")if len(input)> 0 else None
             self.console.move(self.height, self.width + cursor)
         if input.startswith("."):
             input = "0"+input
-        return float(input)
+        if input:
+            return input, True
+        return 0, False
+
 
 
     def selection_input(self, options: list[str], cursor:int = 0, msg: str = "")-> str:
